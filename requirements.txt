@@ -1,13 +1,13 @@
 serpapi
+pandas==2.2.1
 google-search-results
 beautifulsoup4==4.12.2
+scikit-learn==1.4.2
 gensim==4.3.2
 joblib==1.4.0
 mysql-connector-python==8.3.0
 nltk
-pandas==2.2.1
 parsel==1.8.1
 pymupdf==1.24.5
 requests==2.32.2
-scikit-learn==1.4.2
 selenium==3.141.0
