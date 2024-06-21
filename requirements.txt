@@ -6,7 +6,7 @@ google-search-results
 scikit-learn==1.4.2
 scipy
 beautifulsoup4==4.12.2
-gensim==4.3.2
+gensim==4.0.1
 joblib==1.4.0
 mysql-connector-python==8.3.0
 nltk
