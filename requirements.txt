@@ -1,8 +1,9 @@
+--upgrade pip
 serpapi
-pandas==2.2.1
+pandas
 google-search-results
 scipy
-numpy==1.21.0
+numpy
 beautifulsoup4==4.12.2
 scikit-learn==1.4.2
 gensim==4.3.2
