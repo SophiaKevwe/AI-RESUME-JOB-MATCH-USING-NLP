@@ -1,4 +1,4 @@
---upgrade pip
+pip
 serpapi
 pandas
 google-search-results
