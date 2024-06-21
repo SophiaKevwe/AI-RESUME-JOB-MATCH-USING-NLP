@@ -82,7 +82,6 @@ def save_resume(candidate_id, resume_file, resume_text):
             connection.commit()
         connection.close()
 
-              
 def is_email_registered(user_type, email):
     table = "candidate" if user_type == "Candidate" else "employer"
     query = f"SELECT * FROM {table} WHERE email = %s"
@@ -95,12 +94,12 @@ def is_email_registered(user_type, email):
         return user is not None
     return False
 
-def add_job(title, description, company, location, category, link):
+def add_job(title, description, company, location, category, link, employer_id):
     connection = create_connection()
     if connection:
         with connection.cursor() as cursor:
-            cursor.execute("INSERT INTO job (title, description, company, location, category, link) VALUES (%s, %s, %s, %s, %s, %s)",
-                           (title, description, company, location, category, link))
+            cursor.execute("INSERT INTO job (title, description, company, location, category, link, employer_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                           (title, description, company, location, category, link, employer_id))
             connection.commit()
         close_connection(connection)
 
@@ -349,19 +348,19 @@ def linkedin_job_search(job_title, location):
             if job_data:
                 job_description = job_data.get("jobDescription", [])
                 job_listing = {
-                "Title": title,
-                "Company": company,
-                "Location": location,
-                "Link": href_link,
+                "title": title,
+                "company": company,
+                "location": location,
+                "link": href_link,
                 "description": job_description
                 }
                 job_lists.append(job_listing)
             else:
                 job_listing = {
-                "Title": title,
-                "Company": company,
-                "Location": location,
-                "Link": href_link,
+                "title": title,
+                "company": company,
+                "location": location,
+                "link": href_link,
                 "description": "Not Available"
                 }
                 job_lists.append(job_listing)
@@ -393,7 +392,7 @@ def indeed_job_search(job_title, location):
             job_soup = BeautifulSoup(job_response.text, 'html5lib')
             job_description_tag = job_soup.find('div',{'class':'jobsearch-JobComponent-description css-16y4thd eu4oa1w0'}) 
             job_desc = job_description_tag.text.strip() if job_description_tag else "N/A"
-            job_listing_ = {"Title": title, "Company": company, "Location": location, "Link": href_link, "description": job_desc}
+            job_listing_ = {"title": title, "company": company, "location": location, "link": href_link, "description": job_desc}
             job_listings_dict.append(job_listing_)
 
     return job_listings_dict
@@ -498,11 +497,11 @@ def job_apply_page():
         
     if st.button("Done Applying"):
         candidate_id = st.session_state.get("user_id")  # Assuming candidate_id is stored in session state
-        job_id = selected_job.get("job_id")  
+        job_id = selected_job.get("job_id","")  
         db_apply(candidate_id, job_id, similarity_score)
         st.success("Application submitted successfully!")
         
-        if st.radio("Would you like interview preparation materials?", options=["No", "Yes"]) == "Yes":
+        if st.radio("Would you like interview preparation materials?", options=["Yes", "No"]) == "Yes":
             st.write(f"Here are some interview preparation videos on {search_query} jobs:")
             intvideos = get_youtube_videos(search_query+" interview prep")
             for title, link in intvideos:
@@ -656,8 +655,7 @@ def job_search_page():
     if st.session_state.current_page != "login":
         if st.button("Go Back"):
             st.session_state.current_page = "file_submission"
-        
-        
+          
 def employer_dashboard_page():
     st.title("Employer Dashboard")
     st.write("Welcome to the employer dashboard.")
@@ -684,12 +682,12 @@ def add_job_page():
     job_link = st.text_input("Job Link", "e.g., https://abc.com/jobs/123")
     job_description = st.text_area("Job Description", "Enter the job description here...")
     if st.button("Submit"):
-        add_job(job_title, job_description, job_company, job_location, job_category, job_link)
+        add_job(job_title, job_description, job_company, job_location, job_category, job_link, st.session_state.user_id)
         st.success("Job added successfully!")
   
 def view_applications_page():
     st.header("View Applications")
-    employer_id = st.session_state.get("user_id")
+    employer_id = st.session_state.user_id
     jobs = fetch_jobs_by_employer(employer_id)
     if not jobs:
         st.write("No jobs found for this employer.")
