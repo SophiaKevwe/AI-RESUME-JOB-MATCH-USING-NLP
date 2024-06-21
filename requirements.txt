@@ -8,7 +8,6 @@ parsel==1.8.1
 pymupdf==1.24.5
 requests==2.32.2
 scikit-learn==1.4.2
-scipy==1.12.0
 selenium==3.141.0
 serpapi==0.1.5
 streamlit==1.32.0
