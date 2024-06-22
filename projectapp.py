@@ -1,6 +1,7 @@
 import pandas as pd
 import string
 import re
+import base64
 from collections import Counter
 import nltk
 import joblib
@@ -40,7 +41,7 @@ if 'similarity_score' not in st.session_state:
 if 'page' not in st.session_state:
     st.session_state.page = ""
     
-    
+st.set_page_config(layout="wide")
 def create_connection():
     try:
         connection = mysql.connector.connect(
@@ -151,15 +152,20 @@ def db_apply(candidate_id, job_id, similarity_score):
 def display_applications(job_id):
     applications = fetch_applications_for_job(job_id)
     table_data = []
+    encoded_pdf = base64.b64encode(application['resume_file']).decode('utf-8')
+    # Create a data URL for the PDF
+    download_link = f'<a href="data:application/pdf;base64,{encoded_pdf}" download="resume_{application["id"]}.pdf">Download Resume</a>'
+        
     for application in applications:
         table_data.append({
             "Candidate ID": application['id'],
             "Email": application['email'],
             "Similarity Score": f"{application['similarity_score']:.2f}",
             "Application Date": application['application_date'],
-            "Download Resume": f"[Download Resume](data:application/pdf;base64,{application['resume_file']})"
+            "Download Resume": download_link
         })
     st.table(pd.DataFrame(table_data))
+    st.write(df.to_html(escape=False), unsafe_allow_html=True)
 
 def verify_login(user_type, email, password):
     table = "candidate" if user_type == "Candidate" else "employer"
@@ -174,20 +180,70 @@ def verify_login(user_type, email, password):
     return user
 
 def role_selection_page():
-    st.title("Welcome")
-    st.write("Are you a candidate or an employer?")
-    st.session_state.user_type = st.selectbox("Select your role", ["Candidate", "Employer"])
-    # st.session_state.user_type = st.radio('Select your role:', ["Candidate", "Employer"])
+    page_bg_img = f"""
+    <style>
+    [data-testid="stAppViewContainer"] > .main {{
+    background-image: url("https://img.freepik.com/free-photo/flat-lay-desk-concept-with-copy-space_23-2148236810.jpg?size=626&ext=jpg&ga=GA1.1.1141335507.1718928000&semt=ais_user");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: local;
+    }}
+    [data-testid="stHeader"] {{
+    background: rgba(0,0,0,0);
+    }}
+    </style>
+    """
+    st.title("Welcome To JobSync")
+    st.subheader("Your One-Stop Platform for Job Matching and Skill Gap Analysis")
+    
+    st.write("""
+        At JobSync, we aim to bridge the gap between job seekers and employers by leveraging advanced AI and data science.
+        Whether you are a candidate looking for the perfect job or an employer seeking the ideal candidate, JobSync is here to help.
+    """)
+    
+    st.write("### For Candidates:")
+    st.write("""
+        - **Find Jobs:** Discover job opportunities that match your skills and preferences.
+        - **Skill Gap Analysis:** Identify skills you need to improve to match job requirements.
+        - **Resume Upload:** Upload and manage your resumes for better job matching.
+    """)
+    
+    st.write("### For Employers:")
+    st.write("""
+        - **Post Jobs:** Easily create and manage job postings.
+        - **Review Applications:** Access and review applications from potential candidates.
+        - **Candidate Matching:** Find the best candidates based on their skills and experience.
+    """)
 
+    st.write("**Are you a candidate or an employer?**")
+    st.session_state.user_type = st.selectbox("Select your role", ["Candidate", "Employer"])
     if st.button("Proceed"):
         st.session_state.current_page = "login"
+    st.markdown(page_bg_img, unsafe_allow_html=True) 
+    
 
 def sign_up_page():
+    page_bg_img = f"""
+    <style>
+    [data-testid="stAppViewContainer"] > .main {{   
+    background-image: url("https://static.vecteezy.com/system/resources/previews/017/396/233/non_2x/fashion-style-template-with-abstract-shapes-in-pastel-and-plant-colors-neutral-background-with-minimalistic-theme-vector.jpg");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: local;
+    }}
+    [data-testid="stHeader"] {{
+    background: rgba(0,0,0,0);
+    }}
+    </style>
+    """
     st.title("Sign Up")
     name = st.text_input("Name")
     email = st.text_input("Email")
     number = st.text_input("Phone Number")
     password = st.text_input("Password", type="password")
+    st.markdown(page_bg_img, unsafe_allow_html=True)
 
     if st.button("Complete Sign Up"):
         if is_email_registered(st.session_state.user_type, email):
@@ -198,7 +254,21 @@ def sign_up_page():
             st.session_state.current_page = "login"
 
 def login_page():
-    st.title("Login")
+    page_bg_img = f"""
+    <style>
+    [data-testid="stAppViewContainer"] > .main {{
+    background-image: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMAAjNlH7VmgF5Zd4ypShnXmWwZn7SnZ82Cw&s");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: local;
+    }}
+    [data-testid="stHeader"] {{
+    background: rgba(0,0,0,0);
+    }}
+    </style>
+    """
+    st.title("Login 🔒")
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
@@ -214,16 +284,32 @@ def login_page():
         else:
             st.error("Invalid email or password")
     
+    st.markdown(page_bg_img, unsafe_allow_html=True) 
     st.write("Not a user? Sign up!")
     if st.button("Sign Up"):
         st.session_state.current_page = "sign_up"
 
 # File submission page
 def file_submission_page():
-    st.title("Resume Upload")
+    page_bg_img = f"""
+    <style>
+    [data-testid="stAppViewContainer"] > .main {{   
+    background-image: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMAAjNlH7VmgF5Zd4ypShnXmWwZn7SnZ82Cw&s");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: local;
+    }}
+    [data-testid="stHeader"] {{
+    background: rgba(0,0,0,0);
+    }}
+    </style>
+    """
+    st.title("📁 Resume Upload")
     st.write("Please submit your resume in PDF format")
     st.write("Choose to either know your job category or search for a job straight away")
     uploaded_file = st.file_uploader("Upload Resume")
+    st.markdown(page_bg_img, unsafe_allow_html=True)
 
     if uploaded_file is None:
         st.warning("Please upload a file to begin")
@@ -232,12 +318,13 @@ def file_submission_page():
         st.write("File submitted successfully!")
         st.session_state.filep = io.BytesIO(uploaded_file.read())
         st.session_state.filepdf = fitz.open(stream=st.session_state.filep, filetype="pdf")
+        with st.sidebar:
+            st.header("Candidate Actions")
+            if st.button("Know Your Job Category"):
+                st.session_state.current_page = "job_category"
 
-        if st.button("Know Your Job Category"):
-            st.session_state.current_page = "job_category"
-
-        elif st.button("Search for a Job"):
-            st.session_state.current_page = "job_search"
+            elif st.button("Search for a Job"):
+                st.session_state.current_page = "job_search"
     
     if st.session_state.current_page != "login":
         if st.button("Go Back"):
@@ -245,8 +332,23 @@ def file_submission_page():
 
 # Job category page
 def know_your_job_category_page():
-    st.title("Job Category")
+    st.title("Job Category ✅")
     st.write("Here you can find your suitable job category.")
+    page_bg_img = f"""
+    <style>
+    [data-testid="stAppViewContainer"] > .main {{   
+    background-image: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMAAjNlH7VmgF5Zd4ypShnXmWwZn7SnZ82Cw&s");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: local;
+    }}
+    [data-testid="stHeader"] {{
+    background: rgba(0,0,0,0);
+    }}
+    </style>
+    """
+    st.markdown(page_bg_img, unsafe_allow_html=True)
     cleaned_text = preprocess_pdf(st.session_state.filepdf)
     save_resume(st.session_state.user_id,st.session_state.filep,cleaned_text)
     # Loading necessary files
@@ -462,6 +564,21 @@ def get_coursera_courses(search_query):
     return courses[:5] 
 
 def job_apply_page():
+    page_bg_img = f"""
+    <style>
+    [data-testid="stAppViewContainer"] > .main {{   
+    background-image: url("https://images.rawpixel.com/image_800/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvcm0yNDYta2F0aWUtMDQtZy5qcGc.jpg");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: local;
+    }}
+    [data-testid="stHeader"] {{
+    background: rgba(0,0,0,0);
+    }}
+    </style>
+    """
+    st.markdown(page_bg_img, unsafe_allow_html=True)
     selected_job = st.session_state.get("selected_job", {})
     similarity_score = st.session_state.get("similarity_score", 0) * 100
     job_title = selected_job.get("title", "")
@@ -486,9 +603,11 @@ def job_apply_page():
     st.write("Here are some recommendations to help you improve your skills and increase your chances:")
 
     st.subheader("Recommended Courses on Coursera:")
-    courses = get_coursera_courses(search_query)
+    courses = get_coursera_courses(search_query+" Courses")
     for title, url, host in courses:
-        st.write(f"**Title**: [{title}]({url}) \n **Host**: {host} \n ")
+        st.write(f"**Title**: [{title}]({url})")
+        st.write(f"**Host**: {host}") 
+        st.write(f"-----------------") 
 
     st.subheader("Recommended YouTube Videos:")
     videos = get_youtube_videos(search_query+" Courses")
@@ -497,7 +616,7 @@ def job_apply_page():
         
     if st.button("Done Applying"):
         candidate_id = st.session_state.get("user_id")  # Assuming candidate_id is stored in session state
-        job_id = selected_job.get("job_id","")  
+        job_id = selected_job.get("id","")  
         db_apply(candidate_id, job_id, similarity_score)
         st.success("Application submitted successfully!")
         
@@ -522,7 +641,21 @@ def apply_for_job(job,similarity):
 def job_search_page():
     st.title("Job Search")
     st.write("Please enter your job category and select a location to search for jobs.")
-
+    page_bg_img = f"""
+    <style>
+    [data-testid="stAppViewContainer"] > .main {{   
+    background-image: url("https://static.vecteezy.com/system/resources/previews/017/396/233/non_2x/fashion-style-template-with-abstract-shapes-in-pastel-and-plant-colors-neutral-background-with-minimalistic-theme-vector.jpg");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: local;
+    }}
+    [data-testid="stHeader"] {{
+    background: rgba(0,0,0,0);
+    }}
+    </style>
+    """
+    st.markdown(page_bg_img, unsafe_allow_html=True)
     job_category_key = "job_category_input"
 
     # Retrieve the job category from the session state or default to an empty string
@@ -621,9 +754,9 @@ def job_search_page():
                     for idx, (index, similarity_score) in enumerate(ranked_job_listings):
                         job_listing = job_listings_strings[index]
                         st.write(f"Rank: {idx+1}")
-                        st.markdown(f"**Title:** [{job_listing['Title']}]({job_listing['Link']})")
-                        st.markdown(f"**Company:** {job_listing['Company']}")
-                        st.markdown(f"**Location:** {job_listing['Location']}")
+                        st.markdown(f"**Title:** [{job_listing['title']}]({job_listing['link']})")
+                        st.markdown(f"**Company:** {job_listing['company']}")
+                        st.markdown(f"**Location:** {job_listing['location']}")
                         st.markdown(f"**Similarity Score:** {similarity_score:.2f}")
                         st.button("Apply for job", key=f"apply_{idx}", on_click=apply_for_job, args=(job_listing,similarity_score))
                         st.write("---")
@@ -644,9 +777,9 @@ def job_search_page():
                     for idx, (index, similarity_score) in enumerate(ranked_job_listings):
                         job_listing = job_listings_strings[index]
                         st.write(f"Rank: {idx+1}")
-                        st.markdown(f"**Title:** [{job_listing['Title']}]({job_listing['Link']})")
-                        st.markdown(f"**Company:** {job_listing['Company']}")
-                        st.markdown(f"**Location:** {job_listing['Location']}")
+                        st.markdown(f"**Title:** [{job_listing['title']}]({job_listing['link']})")
+                        st.markdown(f"**Company:** {job_listing['company']}")
+                        st.markdown(f"**Location:** {job_listing['location']}")
                         st.markdown(f"**Similarity Score:** {similarity_score:.2f}")
                         st.button("Apply for job", key=f"apply_{idx}", on_click=apply_for_job, args=(job_listing,similarity_score))
                         st.write("---")
@@ -658,18 +791,41 @@ def job_search_page():
           
 def employer_dashboard_page():
     st.title("Employer Dashboard")
-    st.write("Welcome to the employer dashboard.")
+    st.write("Welcome to the employer dashboard. Here you can manage your job postings, review applications, and track your hiring progress. Use the sidebar to navigate between different sections.")
+    page_bg_img = f"""
+    <style>
+    [data-testid="stAppViewContainer"] > .main {{   
+    background-image: url("https://i.pinimg.com/736x/5e/25/01/5e25011fdd8ee087e21d733b9df66af8.jpg");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: local;
+    }}
+    [data-testid="stHeader"] {{
+    background: rgba(0,0,0,0);
+    }}
+    </style>
+    """
+    st.markdown(page_bg_img, unsafe_allow_html=True)
+    st.subheader("Tips & Recommendations")
+    st.write("**Creating Effective Job Postings:** Provide clear and concise job descriptions, highlight key responsibilities, and specify required qualifications.")
+    st.write("**Optimizing the Hiring Process:** Use structured interviews, standardize evaluation criteria, and provide timely feedback to candidates.")
+    st.write("**Selecting the Best Candidates:** Focus on both technical skills and cultural fit, and consider the potential for growth and development.")
     with st.sidebar:
         st.header("Employer Actions")
         if st.button("Add Job"):
             st.session_state.page = "add_job"
         if st.button("View Applications"):
             st.session_state.page = "view_applications"
+        if st.button("Logout"):
+            st.session_state.login_status = False
+            st.session_state.current_page = "role_selection"
             
     if st.session_state.page == "add_job":
         add_job_page()
     elif st.session_state.page == "view_applications":
         view_applications_page()
+    
                
 def add_job_page():
     st.header("Add a Job")
