@@ -1,7 +1,6 @@
 import pandas as pd
 import string
 import re
-import base64
 from collections import Counter
 import nltk
 import joblib
@@ -41,7 +40,7 @@ if 'similarity_score' not in st.session_state:
 if 'page' not in st.session_state:
     st.session_state.page = ""
     
-st.set_page_config(layout="wide")
+# st.set_page_config(layout="wide")
 def create_connection():
     try:
         connection = mysql.connector.connect(
@@ -154,17 +153,19 @@ def display_applications(job_id):
     table_data = []
     # encoded_pdf = base64.b64encode(application['resume_file']).decode('utf-8')
     # Create a data URL for the PDF
-    # download_link = f'<a href="data:application/pdf;base64,{encoded_pdf}" download="resume_{application["id"]}.pdf">Download Resume</a>'
-        
+    # download_link = f'<a href="data:application/pdf;base64,{encoded_pdf}" download="resume_{application["id"]}.pdf">Download Resume</a>'    
     for application in applications:
         table_data.append({
             "Candidate ID": application['id'],
-            "Email": application['email'],
+            "Email": f"[{application['email']}](mailto:{application['email']})",
             "Similarity Score": f"{application['similarity_score']:.2f}",
             "Application Date": application['application_date'],
-            # "Download Resume": download_link
         })
-    st.table(pd.DataFrame(table_data))
+    
+    # Convert the table_data into a DataFrame
+    df = pd.DataFrame(table_data)
+    # Use the 'unsafe_allow_html' parameter to allow rendering of HTML links
+    st.markdown(df.to_markdown(), unsafe_allow_html=True)
 
 def verify_login(user_type, email, password):
     table = "candidate" if user_type == "Candidate" else "employer"
@@ -182,7 +183,7 @@ def role_selection_page():
     page_bg_img = f"""
     <style>
     [data-testid="stAppViewContainer"] > .main {{
-    background-image: url("https://img.freepik.com/free-photo/flat-lay-desk-concept-with-copy-space_23-2148236810.jpg?size=626&ext=jpg&ga=GA1.1.1141335507.1718928000&semt=ais_user");
+    background-image: url("https://img.freepik.com/premium-photo/resumes-applicants-magnifying-glass-beige-background-top-view-with-copy-space-job-search-concept_35674-14216.jpg");
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
@@ -193,34 +194,35 @@ def role_selection_page():
     }}
     </style>
     """
+    st.markdown(page_bg_img, unsafe_allow_html=True)
+    
     st.title("Welcome To JobSync")
     st.subheader("Your One-Stop Platform for Job Matching and Skill Gap Analysis")
-    
-    st.write("""
-        At JobSync, we aim to bridge the gap between job seekers and employers by leveraging advanced AI and data science.
-        Whether you are a candidate looking for the perfect job or an employer seeking the ideal candidate, JobSync is here to help.
-    """)
-    st.write("**Are you a candidate or an employer?**")
-    st.session_state.user_type = st.selectbox("Select your role", ["Candidate", "Employer"])
+    st.write("**Select your role:**")
+    st.session_state.user_type = st.selectbox("", ["Candidate", "Employer"])
     if st.button("Proceed"):
         st.session_state.current_page = "login"
         
     st.write("### For Candidates:")
     st.write("""
-        - **Find Jobs:** Discover job opportunities that match your skills and preferences.
-        - **Skill Gap Analysis:** Identify skills you need to improve to match job requirements.
-        - **Resume Upload:** Upload and manage your resumes for better job matching.
+        - **Find Jobs:** Discover opportunities matching your skills.
+        - **Skill Gap Analysis:** Identify and bridge skill gaps.
+        - **Resume Upload:** Manage your resumes for better matching.
     """)
     
     st.write("### For Employers:")
     st.write("""
-        - **Post Jobs:** Easily create and manage job postings.
-        - **Review Applications:** Access and review applications from potential candidates.
-        - **Candidate Matching:** Find the best candidates based on their skills and experience.
+        - **Post Jobs:** Create and manage job postings.
+        - **Review Applications:** Access and review candidate applications.
+        - **Candidate Matching:** Find the best candidates based on skills and experience.
     """)
-
-    st.markdown(page_bg_img, unsafe_allow_html=True) 
     
+def is_valid_email(email):
+    regex = r'^\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    return re.match(regex, email)
+
+def is_valid_phone_number(phone_number):
+    return phone_number.isdigit()
 
 def sign_up_page():
     page_bg_img = f"""
@@ -241,11 +243,15 @@ def sign_up_page():
     name = st.text_input("Name")
     email = st.text_input("Email")
     number = st.text_input("Phone Number")
-    password = st.text_input("Password", type="password")
+    password = st.text_input("Create a password", type="password")
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
     if st.button("Complete Sign Up"):
-        if is_email_registered(st.session_state.user_type, email):
+        if not is_valid_email(email):
+            st.warning("Please enter a valid email address.")
+        elif not is_valid_phone_number(number):
+            st.warning("Please enter a valid phone number (digits only).")
+        elif is_email_registered(st.session_state.user_type, email):
             st.warning("This email is already registered. Please go back and log in.")
         else:
             save_user_to_db(st.session_state.user_type, name, email, number, password)
@@ -752,17 +758,20 @@ def job_search_page():
                     ranked_job_listings.sort(key=lambda x: x[1], reverse=True)
                 else:
                     ranked_job_listings.sort(key=lambda x: x[1])
-                st.write(f"Displaying {len(ranked_job_listings)} job listings:")
-                with st.expander("Job Listings"):
-                    for idx, (index, similarity_score) in enumerate(ranked_job_listings):
-                        job_listing = job_listings_strings[index]
-                        st.write(f"Rank: {idx+1}")
-                        st.markdown(f"**Title:** [{job_listing['title']}]({job_listing['link']})")
-                        st.markdown(f"**Company:** {job_listing['company']}")
-                        st.markdown(f"**Location:** {job_listing['location']}")
-                        st.markdown(f"**Similarity Score:** {similarity_score:.2f}")
-                        st.button("Apply for job", key=f"apply_{idx}", on_click=apply_for_job, args=(job_listing,similarity_score))
-                        st.write("---")
+                if len(ranked_job_listings) == 0:
+                    st.write(f"{'*'*10} Sorry no results found on platform {'*'*10}")
+                else:
+                    st.write(f"Displaying {len(ranked_job_listings)} job listings:")
+                    with st.expander("Job Listings"):
+                        for idx, (index, similarity_score) in enumerate(ranked_job_listings):
+                            job_listing = job_listings_strings[index]
+                            st.write(f"Rank: {idx+1}")
+                            st.markdown(f"**Title:** [{job_listing['title']}]({job_listing['link']})")
+                            st.markdown(f"**Company:** {job_listing['company']}")
+                            st.markdown(f"**Location:** {job_listing['location']}")
+                            st.markdown(f"**Similarity Score:** {similarity_score:.2f}")
+                            st.button("Apply for job", key=f"apply_{idx}", on_click=apply_for_job, args=(job_listing,similarity_score))
+                            st.write("---")
 
         with col2:
             if st.button("Indeed"):
@@ -775,17 +784,20 @@ def job_search_page():
                     ranked_job_listings.sort(key=lambda x: x[1], reverse=True)
                 else:
                     ranked_job_listings.sort(key=lambda x: x[1])
-                st.write(f"Displaying {len(ranked_job_listings)} job listings:")
-                with st.expander("Job Listings"):
-                    for idx, (index, similarity_score) in enumerate(ranked_job_listings):
-                        job_listing = job_listings_strings[index]
-                        st.write(f"Rank: {idx+1}")
-                        st.markdown(f"**Title:** [{job_listing['title']}]({job_listing['link']})")
-                        st.markdown(f"**Company:** {job_listing['company']}")
-                        st.markdown(f"**Location:** {job_listing['location']}")
-                        st.markdown(f"**Similarity Score:** {similarity_score:.2f}")
-                        st.button("Apply for job", key=f"apply_{idx}", on_click=apply_for_job, args=(job_listing,similarity_score))
-                        st.write("---")
+                if len(ranked_job_listings) == 0:
+                    st.write(f"{'*'*10} Sorry no results found on platform {'*'*10}")
+                else:
+                    st.write(f"Displaying {len(ranked_job_listings)} job listings:")
+                    with st.expander("Job Listings"):
+                        for idx, (index, similarity_score) in enumerate(ranked_job_listings):
+                            job_listing = job_listings_strings[index]
+                            st.write(f"Rank: {idx+1}")
+                            st.markdown(f"**Title:** [{job_listing['title']}]({job_listing['link']})")
+                            st.markdown(f"**Company:** {job_listing['company']}")
+                            st.markdown(f"**Location:** {job_listing['location']}")
+                            st.markdown(f"**Similarity Score:** {similarity_score:.2f}")
+                            st.button("Apply for job", key=f"apply_{idx}", on_click=apply_for_job, args=(job_listing,similarity_score))
+                            st.write("---")
                     
 
     if st.session_state.current_page != "login":
