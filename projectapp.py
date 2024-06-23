@@ -9,6 +9,7 @@ import fitz
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer, WordNetLemmatizer
 from nltk.corpus import wordnet
+import serpapi
 from serpapi import GoogleSearch
 from nltk.tokenize import word_tokenize
 import streamlit as st
