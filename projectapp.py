@@ -5,6 +5,9 @@ from collections import Counter
 import nltk
 import joblib
 import io
+from io import BytesIO
+import docx
+from docx import Document 
 import fitz
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer, WordNetLemmatizer
@@ -39,6 +42,8 @@ if 'similarity_score' not in st.session_state:
     st.session_state.similarity_score = 0
 if 'page' not in st.session_state:
     st.session_state.page = ""
+# if "file_type" not in st.session_state:
+#     st.session_state.file_type = "pdf"
     
 # st.set_page_config(layout="wide")
 def create_connection():
@@ -156,7 +161,8 @@ def display_applications(job_id):
             "Candidate ID": application['id'],
             "Email": f"[{application['email']}](mailto:{application['email']})",
             "Similarity Score": f"{application['similarity_score']:.2f}",
-            "Application Date": application['application_date']
+            "Application Date": application['application_date'],
+            # "Resume": application["resume_file"]
         })
     
     # Convert the table_data into a DataFrame
@@ -242,6 +248,9 @@ def sign_up_page():
     number = st.text_input("Phone Number")
     password = st.text_input("Create a password", type="password")
     st.markdown(page_bg_img, unsafe_allow_html=True)
+    
+    if st.button("Back to Login"):
+        st.session_state.current_page = "login"
 
     if st.button("Complete Sign Up"):
         if not is_valid_email(email):
@@ -309,17 +318,22 @@ def file_submission_page():
     """
     st.markdown(page_bg_img, unsafe_allow_html=True)
     st.title("📁 Resume Upload")
-    st.write("Please submit your resume in PDF format")
+    st.write("Please submit your resume in PDF or DOCX format")
     st.write("Choose to either know your job category or search for a job straight away")
-    uploaded_file = st.file_uploader("Upload Resume")
+    uploaded_file = st.file_uploader("Upload Resume", type=["pdf", "docx"])
 
     if uploaded_file is None:
         st.warning("Please upload a file to begin")
-
     else:
         st.write("File submitted successfully!")
-        st.session_state.filep = io.BytesIO(uploaded_file.read())
-        st.session_state.filepdf = fitz.open(stream=st.session_state.filep, filetype="pdf")
+        file_extension = uploaded_file.name.split(".")[-1]
+        if file_extension == "pdf":
+            st.session_state.filep = io.BytesIO(uploaded_file.read())
+            st.session_state.filepdf = fitz.open(stream=st.session_state.filep, filetype="pdf")
+            st.session_state.file_type = "pdf"
+        elif file_extension == "docx":
+            st.session_state.filedocx = io.BytesIO(uploaded_file.read()) 
+            st.session_state.file_type = "docx"
         with st.sidebar:
             st.header("Candidate Actions")
             if st.button("Know Your Job Category"):
@@ -351,7 +365,12 @@ def know_your_job_category_page():
     </style>
     """
     st.markdown(page_bg_img, unsafe_allow_html=True)
-    cleaned_text = preprocess_pdf(st.session_state.filepdf)
+    if st.session_state.file_type == "pdf":
+        cleaned_text = preprocess_pdf(st.session_state.filepdf)
+    elif st.session_state.file_type == "docx":
+        cleaned_text = preprocess_docx(st.session_state.filedocx)
+        
+    
     save_resume(st.session_state.user_id,st.session_state.filep,cleaned_text)
     # Loading necessary files
     joblib_file = "job_category_model.pkl"
@@ -387,6 +406,13 @@ def extract_text_from_pdf(pdf_doc):
         text += page.get_text()
     return text
 
+def extract_text_from_docx(docx_file):
+    doc = docx.Document(docx_file)
+    full_text = ""
+    for para in doc.paragraphs:
+        full_text += para.text + "\n"
+    return full_text
+
 # Preprocess text
 def preprocess_text(text):
     
@@ -409,6 +435,11 @@ def preprocess_text(text):
     words = " ".join([lemmatizer.lemmatize(word, wordnet_map.get(pos[0], wordnet.NOUN)) for word, pos in pos_tagged_text])
                     
     return words
+
+def preprocess_docx(docx_file):
+    text = extract_text_from_docx(docx_file)
+    cleaned_text = preprocess_text(text)
+    return cleaned_text
 
 def parse_job_page(job_url):
     response = requests.get(job_url)
@@ -709,9 +740,13 @@ def job_search_page():
         st.write("Searching on platform:")
         # Fetch jobs from the database
         jobs = fetch_jobs()
+        job_category_words = job_category_input.lower().split()
 
         # Filter jobs based on job category and location
-        matched_jobs = [job for job in jobs if job_category_input.lower() in job['category'].lower() and (customized_location.lower() in job['location'].lower())]
+        matched_jobs = [job for job in jobs if any(word in job['category'].lower() for word in job_category_words) and customized_location.lower() in job['location'].lower()]
+
+        # # Filter jobs based on job category and location
+        # matched_jobs = [job for job in jobs if job_category_input.lower() in job['category'].lower() and (customized_location.lower() in job['location'].lower())]
 
         # Preprocess the resume
         resume_text = preprocess_pdf(st.session_state.filepdf)
