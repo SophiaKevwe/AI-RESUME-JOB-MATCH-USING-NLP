@@ -1,6 +1,6 @@
 # RESUME-JOB-MATCH
 
-- A streamlit AI-powered job-match and skill gap analysis web platform using NLP 
+A STREAMLIT AI-POWERED JOB-MATCH AND SKILL GAP ANALYSIS WEB PLATFORM USING NATURAL LANGUAGE PROCESSING
 
 - **For Candidates**:
 -﻿﻿Find Jobs: Discover opportunities matching your skills.
