@@ -13,5 +13,7 @@ A STREAMLIT AI-POWERED JOB-MATCH AND SKILL GAP ANALYSIS WEB PLATFORM USING NATUR
 **For Employers**:
 
  - Post Jobs: Create and manage job postings.
+   
  ﻿﻿- Review Applications: Access and review candidate applications.
+   
  - Candidate Matching: Find the best candidates based on skills and experience.
