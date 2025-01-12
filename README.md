@@ -1,19 +1,47 @@
 # RESUME-JOB-MATCH
 
-A STREAMLIT AI-POWERED JOB-MATCH AND SKILL GAP ANALYSIS WEB PLATFORM USING NATURAL LANGUAGE PROCESSING
+**RESUME-JOB-MATCH** is an AI-powered web platform built with Streamlit, designed for job matching and skill gap analysis using Natural Language Processing (NLP). The platform provides tailored functionalities for both candidates and employers, making hiring more efficient and effective.
 
-**For Candidates**:
+## Project Overview  
 
-- ﻿﻿Find Jobs: Discover opportunities matching your skills.
+### **For Candidates**  
+- **Find Jobs**: Discover opportunities that match your skills and qualifications.  
+- **Skill Gap Analysis**: Identify gaps in your skills and receive actionable recommendations.  
+- **Resume Upload**: Easily upload and manage resumes for better job matching.  
 
-- Skill Gap Analysis: Identify and bridge skill gaps.
+### **For Employers**  
+- **Post Jobs**: Create and manage job listings to attract top talent.  
+- **Review Applications**: Access and evaluate candidate applications.  
+- **Candidate Matching**: Use AI-powered algorithms to identify the best candidates based on skills and experience.  
 
-- Resume Upload: Manage your resumes for better matching.
+---
 
-**For Employers**:
+## Repository Contents  
 
- - Post Jobs: Create and manage job postings.
-   
- ﻿﻿- Review Applications: Access and review candidate applications.
-   
- - Candidate Matching: Find the best candidates based on skills and experience.
+
+- **`projectapp.py`**: Contains the Streamlit app, NLP model training, Logic for skill gap analysis and dependencies
+- **`requirements.txt`**: Required Python and Streamlit libraries for the app.
+- **`job_tfidf_vectorizer.pkl`**: Serialized machine learning models for job matching and skill analysis.
+- **`job_label_encoder.pkl`**: Serialized machine learning models for job matching and skill analysis.
+- **`PREDICTION DATA CLEANING.ipynb`**: Data cleaning and preprocessing.
+- **`PREDICTION DATASET PREPROCESSING.ipynb`**: Data preprocessing and model development.
+- **`README.md`**: Project documentation (this file).  
+
+---
+
+## Tools & Skills Demonstrated  
+
+- **Natural Language Processing (NLP)**: Skill extraction, job-candidate matching, and gap analysis.  
+- **Machine Learning**: Developing and training models for classification and analysis.  
+- **Data Engineering**: Cleaning and preprocessing datasets for robust model performance.  
+- **Web Development**: Interactive Streamlit app with user-friendly interfaces.  
+- **Database Management**: Using SQL for structured storage and querying of data.  
+
+---
+
+## Installation  
+
+1. Clone this repository:  
+   ```bash
+   git clone https://github.com/your-username/resume-job-match.git
+   cd resume-job-match
