@@ -43,5 +43,5 @@
 
 1. Clone this repository:  
    ```bash
-   git clone https://github.com/your-username/resume-job-match.git
+   git clone https://github.com/SophiaKevwe/AI-RESUME-JOB-MATCH-USING-NLP.git
    cd resume-job-match
